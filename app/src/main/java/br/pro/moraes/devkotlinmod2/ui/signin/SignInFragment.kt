@@ -1,6 +1,7 @@
 package br.pro.moraes.devkotlinmod2.ui.signin
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -21,6 +22,7 @@ class SignInFragment : Fragment() {
     }
 
     private lateinit var viewModel: SignInViewModel
+
     private lateinit var editTextSignInEmail: EditText
     private lateinit var editTextSignInPassword: EditText
     private lateinit var checkBoxSignInLembrar: CheckBox
@@ -41,18 +43,23 @@ class SignInFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        verificarPrefUserEmail()
+        val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE) ?: return
+
+        verificarPrefUserEmail(sharedPref)
         verificarArquivoLog(view)
+
         buttonSignIn.setOnClickListener {
             if(checkBoxSignInLembrar.isChecked){ //Verifica se o checkbox está marcado e retorna um bool
                 //Armazena preferência
-                salvarPrefUserEmail()
-                val context = activity?.applicationContext
+                var userEmail = editTextSignInEmail.text.toString()
+                salvarPrefUserEmail(sharedPref, userEmail)
                 //como está em um fragmento é necessario o contexto, mas em uma activity só fileDir() da conta
 
             }
         }
     }
+
+
 
     private fun verificarArquivoLog (view: View) {
         val context = activity?.applicationContext
@@ -87,26 +94,30 @@ class SignInFragment : Fragment() {
         Snackbar.make(view, msg, Snackbar.LENGTH_LONG).show()
     }
 
-    private fun salvarPrefUserEmail() {
+    private fun salvarPrefUserEmail(sharedPref: SharedPreferences, email: String) {
+        val editPref = sharedPref.edit()
+        editPref.putString("user_mail", email)
+        Log.d("Email Preference", "set user_email")
+        editPref.apply()
+
+        /*Sobre Preferencias
         //getPreferences(), está contido no contexto da activity
         //como está contido no contexto activity, precisa se referir a activity para chamar o metodo
-        activity?.getPreferences(Context.MODE_PRIVATE)?.edit().apply {
-            val userEmail = editTextSignInEmail.text.toString()
-            this?.putString("user_email", userEmail)
-            //por ser um sistema da chave-valor, é necessário passar dois valores diferentes
-            //chave = "user_email", valor = "valor do edittext do email"
-            Log.i("victor", "victor")
-        }
+        //por ser um sistema da chave-valor, é necessário passar dois valores diferentes
+        //chave = "user_email", valor = "valor do edittext do email"*/
     }
 
-    private fun verificarPrefUserEmail() {
+    private fun verificarPrefUserEmail(sharedPref: SharedPreferences) {
         //Lê o armazenamento de preferência para valorar o campo de email
-        val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE)
+        val userEmail = sharedPref.getString("user_email", null)
+        Log.d("Email", userEmail ?: "null")
+        if (!userEmail.isNullOrBlank()) editTextSignInEmail.setText(userEmail)
+
+        /* Sobre Preferências
         //preferencias são tipos de armazenamentos muito rapidos de serem lidos, não importa muito
         // em qual thread ele será lido.
-        val userEmail = sharedPref?.getString("user_email", null)
-        //recebe dois valores, a chave que vai ser lida e o valor default caso não for encontrado nenhum valor
-        editTextSignInEmail.setText(userEmail)
+        //recebe dois valores, a chave que vai ser lida e o valor default caso não for encontrado nenhum valor*/
     }
 
-}
+    }
+
