@@ -34,6 +34,7 @@ class SignInFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_sign_in, container, false)
 
+        editTextSignInPassword = view.findViewById(R.id.editTextSignInPassword)
         editTextSignInEmail = view.findViewById(R.id.editTextSignInEmail)
         checkBoxSignInLembrar = view.findViewById(R.id.checkBoxSignInLembrar)
         buttonSignIn = view.findViewById(R.id.buttonSignIn)
@@ -46,30 +47,35 @@ class SignInFragment : Fragment() {
         val sharedPref = activity?.getPreferences(Context.MODE_PRIVATE) ?: return
 
         verificarPrefUserEmail(sharedPref)
-        verificarArquivoLog(view)
+        verificarArquivoLog()
 
         buttonSignIn.setOnClickListener {
-            if(checkBoxSignInLembrar.isChecked){ //Verifica se o checkbox está marcado e retorna um bool
-                //Armazena preferência
-                var userEmail = editTextSignInEmail.text.toString()
-                salvarPrefUserEmail(sharedPref, userEmail)
-                //como está em um fragmento é necessario o contexto, mas em uma activity só fileDir() da conta
-
+            val userEmail = editTextSignInEmail.text.toString()
+            val password = editTextSignInPassword.text.toString()
+            escreverLogNoArquivo("Tentativa de Acesso:${userEmail}\n")
+            if(userEmail == "victor.moraesrj@gmail.com" && password == "654321") {
+                escreverLogNoArquivo("Tentativa de Acesso: ok\n")
+                if(checkBoxSignInLembrar.isChecked){ //Verifica se o checkbox está marcado e retorna um bool
+                    //Armazena preferência
+                    salvarPrefUserEmail(sharedPref, userEmail)
+                    //como está em um fragmento é necessario o contexto, mas em uma activity só fileDir() da conta
+            }
+            }else{
+                escreverLogNoArquivo("Tentativa de Acesso: Negada\n")
             }
         }
     }
 
 
 
-    private fun verificarArquivoLog (view: View) {
-        val context = activity?.applicationContext
-
-        val arqLog = File(context?.filesDir, "logsys.log")
+    private fun verificarArquivoLog () {
+        val filesdir = requireContext().filesDir //path até armazenamento interno
+        val arqLog = File(filesdir, "logsys.log") //poderia ser qualquer extensão
         if (!arqLog.exists()) arqLog.createNewFile()
         if (arqLog.canWrite())
-            showSnackbar(view, "Arquivo de Log: OK")
+            Log.d("Log File Read", "OK")
         else
-            showSnackbar(view, "Arquivo de Log: permissão negada")
+            Log.d("Log File Read", "Permissão negada")
 
         /*var file = File(context?.filesDir, "teste.txt")
         if (!file.exists()) file.createNewFile()
@@ -88,6 +94,55 @@ class SignInFragment : Fragment() {
         //file.canExecute               Posso Executar?
 
         //OBS: quando tenta-se escrever em um arquivo que não existe, o SO cria para gente*/
+    }
+
+    private fun escreverLogNoArquivo(msgLog: String){
+        requireContext()
+            .openFileOutput("logsys.log", Context.MODE_APPEND).use{
+            it.write(msgLog.toByteArray())
+        }
+
+        /*
+        Como escrever em arquivo:
+
+        FileOutputStream para fazer a escrita.
+        OpenFileOutput aponta para o armazenamento externo no Diretorio Files.
+
+                                  Na activity exemplo:
+        openFileOutput(nome do arquivo: String, modo de abertura do arquivo: Int)
+        retorna um FileOutputStream
+
+        val fos = openFileOutput("syslog.log", Context.MODE_PRIVATE)
+        fos.write() // Executa a escrita de fato
+
+                                  No Fragment exemplo:
+        A diferença é que no fragment é necessário passar o contexto antes
+
+        requireContext().openFileOutput("logsys.log", Context.MODE_PRIVATE)
+
+        Linha acima passa qual arquivo vai ser escrito, se não existe nenhum "logsys.log" para
+        escrever por cima, cria um arquivo.
+        Isso torna "if (!arqLog.exists()) arqLog.createNewFile()" irrelevante.
+
+        OBS: Se o app tem permissão de escrita, ele te a permissão de criar, ler e escrever no arqv.
+
+        val info = "Victor é muito bonito"
+        requireContext().openFileOutput("logsys.log", Context.MODE_PRIVATE).use{
+            it.write(info.toByteArray())
+        }
+
+        .use{} abre um bloco de contexto, como referencia contextual o FileOutputStream gerado no
+        retorno da função.
+
+        o tipo de em que o .write() permite escrever é "byteArray", porque byteArray e não String?
+        porque FileOutput é do tipo Stream, que faz a escrita sob demanda
+
+        OBS: Função "openFileOutput" especifica parasalvar no armazenamento interno, no diretorio
+        file
+
+        OBS: MODE_PRIVATE sobreescreve o arquivo, APPEND adiciona ao fim do arquivo
+
+        */
     }
 
     private fun showSnackbar(view: View, msg: String) {
