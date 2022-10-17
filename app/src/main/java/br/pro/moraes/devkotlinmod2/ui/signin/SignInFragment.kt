@@ -96,7 +96,7 @@ class SignInFragment : Fragment() {
 
     private fun salvarPrefUserEmail(sharedPref: SharedPreferences, email: String) {
         val editPref = sharedPref.edit()
-        editPref.putString("user_mail", email)
+        editPref.putString("user_email", email)
         Log.d("Email Preference", "set user_email")
         editPref.apply()
 
