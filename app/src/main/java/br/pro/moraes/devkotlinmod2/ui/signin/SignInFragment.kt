@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import br.pro.moraes.devkotlinmod2.R
 import com.google.android.material.snackbar.Snackbar
 import java.io.File
@@ -60,6 +61,7 @@ class SignInFragment : Fragment() {
                     salvarPrefUserEmail(sharedPref, userEmail)
                     //como está em um fragmento é necessario o contexto, mas em uma activity só fileDir() da conta
             }
+                findNavController().navigate(R.id.dashboardFragment)
             }else{
                 escreverLogNoArquivo("Tentativa de Acesso: Negada\n")
             }
